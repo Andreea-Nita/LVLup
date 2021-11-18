@@ -17,6 +17,13 @@ import android.widget.Toast;
 
 import com.andreeanita.lvlup.R;
 import com.andreeanita.lvlup.gpsTracking.GPSActivity;
+import com.andreeanita.lvlup.loginAndRegister.Login;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class HomeActivity extends AppCompatActivity {
     Button startRunning;
@@ -51,16 +58,34 @@ public class HomeActivity extends AppCompatActivity {
                 return true;
 
             case R.id.logoutItem:
-                Toast.makeText(this, "Logout selected", Toast.LENGTH_SHORT).show();
+                deleteEmail();
+                openLogin();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    private void deleteEmail() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            try (BufferedWriter br = Files.newBufferedWriter(Paths.get("src/main/res/raw/login_email.csv"),
+                    Charset.forName("UTF8"))){
+                br.write("");
+                br.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     public void openGPSActivity() {
         Intent intent = new Intent(this, GPSActivity.class);
+        startActivity(intent);
+    }
+
+    public void openLogin() {
+        Intent intent = new Intent(this, Login.class);
         startActivity(intent);
     }
 

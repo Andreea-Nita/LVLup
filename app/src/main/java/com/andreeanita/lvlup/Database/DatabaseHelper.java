@@ -22,7 +22,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("PRAGMA foreign_keys = ON;");
         db.execSQL("CREATE TABLE if not exists user(ID INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT, email TEXT, password TEXT)");
-        db.execSQL("CREATE TABLE if not exists user_activity(ID INTEGER PRIMARY KEY AUTOINCREMENT, datetime INTEGER,pace TEXT,time_elapsed TEXT, distance TEXT,image BLOB, user_id INTEGER NOT NULL,FOREIGN KEY (user_id) REFERENCES user (ID))");
+        db.execSQL("CREATE TABLE if not exists user_activity(ID INTEGER PRIMARY KEY AUTOINCREMENT, datetime INTEGER,pace TEXT," +
+                "time_elapsed TEXT, distance TEXT,image BLOB, user_id INTEGER NOT NULL,FOREIGN KEY (user_id) REFERENCES user (ID))");
     }
 
     @Override
