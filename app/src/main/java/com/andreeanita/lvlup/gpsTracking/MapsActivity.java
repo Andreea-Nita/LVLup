@@ -30,16 +30,20 @@ import com.andreeanita.lvlup.R;
 import com.andreeanita.lvlup.databinding.ActivityMapsBinding;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.Task;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class
 MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
@@ -47,19 +51,22 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
     protected GoogleMap mMap;
     protected ActivityMapsBinding binding;
     protected FusedLocationProviderClient fusedLocationProviderClient;
-    protected Location currentLocation;
     protected static final int REQUEST_CODE = 200;
+    private Location startLocation;
+    protected Location currentLocation;
     protected Location prevLocation;
-    private static long finishDateTime;
-    private static long startDateTime;
-    protected static long time;
-    protected static String timeElapsed;
-    static byte[] image;
-    private static Location startLocation;
-    double distance;
-    String pace;
-    String userEmail;
-    int userId;
+    private long finishDateTime;
+    private long startDateTime;
+    protected long time;
+    private String dateTime;
+    protected String timeElapsed;
+    private byte[] image;
+    private double distance;
+    private String pace;
+    private String userEmail;
+    private int userId;
+
+    private List<LatLng> coordonates = new ArrayList<>();
 
     private DatabaseHelper databaseHelper;
     private SQLiteDatabase db;
@@ -99,6 +106,8 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
         locationManager.requestLocationUpdates(best, 0, 1, locationListener);
 
         startDateTime = Calendar.getInstance().getTimeInMillis();
+        dateTime = calculateTime(startDateTime);
+
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -120,13 +129,18 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
                     @SuppressLint("Range")
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
+
+                        mapShowRoute();
+                        //save map screenshot
+                        image = saveMapPhoto();
+
                         finishDateTime = Calendar.getInstance().getTimeInMillis();
                         time = finishDateTime - startDateTime;
                         timeElapsed = calculateTime(time);
-                        Toast.makeText(getApplicationContext(), timeElapsed, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "time elapsed: " + timeElapsed, Toast.LENGTH_SHORT).show();
 
-                        pace =calculatePace(distance, time);
-                        Toast.makeText(getApplicationContext(), "pace: "+pace, Toast.LENGTH_SHORT).show();
+                        pace = calculatePace(distance, time);
+                        Toast.makeText(getApplicationContext(), "pace: " + pace, Toast.LENGTH_SHORT).show();
 
                         //fetch user id
                         userEmail = PreferenceManager.getDefaultSharedPreferences(MapsActivity.this)
@@ -139,19 +153,10 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
                         userId = cursor.getInt(cursor.getColumnIndex("ID"));
                         db.close();
 
-                        //save map screenshot
-                        image = saveMapPhoto();
-
                         //insert activity in database
-                        boolean insert = databaseHelper.Insert(startDateTime, pace, timeElapsed, distance, image, userId);
+                        boolean insert = databaseHelper.Insert(dateTime, pace, timeElapsed, distance, image, userId);
                         if (insert) {
                             Toast.makeText(getApplicationContext(), "Activity saved ", Toast.LENGTH_SHORT).show();
-                            startDateTime = 0;
-                            pace = null;
-                            timeElapsed = null;
-                            distance = 0;
-                            image = null;
-                            userId = 0;
                             openGPSActivity();
                         } else {
                             Toast.makeText(getApplicationContext(), "Error saving activity", Toast.LENGTH_SHORT).show();
@@ -160,7 +165,7 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
                 }).setNegativeButton("No", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
-                        deleteActivity();
+                        openGPSActivity();
                     }
                 });
 
@@ -198,10 +203,11 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
                 //finishLocation = location;
 
                 LatLng current = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+                coordonates.add(current);
 
                 //calculate distance from first location to current location
                 if (prevLocation != null && currentLocation != null) {
-                    distance = distance+(prevLocation.distanceTo(currentLocation));
+                    distance = distance + (prevLocation.distanceTo(currentLocation));
                 } else {
                     distance = 0;
                 }
@@ -242,11 +248,6 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
         return outputStream.toByteArray();
     }
 
-    private void deleteActivity() {
-        startDateTime = 0;
-        openGPSActivity();
-    }
-
     public void openGPSActivity() {
         Intent intent = new Intent(this, GPSActivity.class);
         startActivity(intent);
@@ -262,13 +263,42 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
     }
 
     public String calculatePace(double distance, long time) {
-        double pace = (time / 1000) / distance;
-        double seconds = pace % 60;
-        int minutes = Integer.parseInt(String.valueOf(pace / 60));
-        StringBuilder finalPace = new StringBuilder();
-        finalPace.append(minutes);
-        finalPace.append(":");
-        finalPace.append(seconds);
-        return finalPace.toString();
+        if (distance != 0 && time != 0) {
+            double pace = (time / 1000) / distance;
+            double seconds = pace % 60;
+            int minutes = Integer.parseInt(String.valueOf(pace / 60));
+            StringBuilder finalPace = new StringBuilder();
+            finalPace.append(minutes);
+            finalPace.append(":");
+            finalPace.append(seconds);
+            return finalPace.toString();
+        } else {
+            return "0";
+        }
+    }
+
+    public void mapShowRoute() {
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for (LatLng c : coordonates) {
+            builder.include(c);
+
+            //initialize the padding for map boundary
+            int padding = 50;
+
+            //create the bounds from latlngBuilder to set into map camera
+            LatLngBounds bounds = builder.build();
+
+            // the camera with bounds and padding to set into map
+            final CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+
+            //call the map call back to know map is loaded or not
+            mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+                @Override
+                public void onMapLoaded() {
+                    //set animated zoom camera into map
+                    mMap.animateCamera(cu);
+                }
+            });
+        }
     }
 }

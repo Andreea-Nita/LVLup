@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.andreeanita.lvlup.R;
 import com.andreeanita.lvlup.gpsTracking.GPSActivity;
+import com.andreeanita.lvlup.gpsTracking.MapsActivity;
 import com.andreeanita.lvlup.loginAndRegister.Login;
 
 import java.io.BufferedWriter;
@@ -41,6 +42,8 @@ public class HomeActivity extends AppCompatActivity {
                 openGPSActivity();
             }
         });
+
+        //TODO: afiseaza activitatile
     }
 
     @Override
@@ -86,11 +89,15 @@ public class HomeActivity extends AppCompatActivity {
 
     public void openLogin() {
         Intent intent = new Intent(this, Login.class);
+        //clear the back stack
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        HomeActivity.this.finish();
     }
 
     // convert from byte array to bitmap
     public static Bitmap getImage(byte[] image) {
         return BitmapFactory.decodeByteArray(image, 0, image.length);
     }
+
 }

@@ -47,7 +47,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public boolean Insert(long dateTime, String pace, String time_elapsed, Double distance, byte[] image,Integer user_id){
+    public boolean Insert(String dateTime, String pace, String time_elapsed, Double distance, byte[] image, Integer user_id){
         SQLiteDatabase sqLiteDatabase=this.getWritableDatabase();
         ContentValues contentValues=new ContentValues();
         contentValues.put("dateTime", String.valueOf(dateTime));
