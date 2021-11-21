@@ -13,7 +13,7 @@
 
     <meta-data
         android:name="com.google.android.gms.version"
-        android:value="@integer/google_play_services_version" />
+        android:value="21.42.18" />
 
     <application
         android:allowBackup="true"
@@ -33,7 +33,8 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
+            android:value="AIzaSyDsqEVQu3RtX03GjQUsp9FZYMTnOu3GKc4" />
+
 
         <activity
             android:name=".gpsTracking.MapsActivity"
@@ -48,9 +49,6 @@
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar"/>
         <activity
             android:name=".loginAndRegister.Register"
-            android:exported="true" />
-        <activity
-            android:name=".MainActivity"
             android:exported="true" />
         <activity
             android:name=".loginAndRegister.Login"

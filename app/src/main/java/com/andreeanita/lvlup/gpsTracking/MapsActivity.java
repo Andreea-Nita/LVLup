@@ -15,6 +15,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
@@ -22,12 +23,15 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.andreeanita.lvlup.Database.DatabaseHelper;
 import com.andreeanita.lvlup.R;
 import com.andreeanita.lvlup.databinding.ActivityMapsBinding;
+import com.andreeanita.lvlup.home.HomeActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
@@ -41,6 +45,10 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.Task;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -58,13 +66,13 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
     private long finishDateTime;
     private long startDateTime;
     protected long time;
-    private String dateTime;
-    protected String timeElapsed;
-    private byte[] image;
-    private double distance;
-    private String pace;
+    public static String timeElapsed;
+    public static byte[] image;
+    float distance = 0.0F;
+    public static String finalDistance;
+    public static String pace;
     private String userEmail;
-    private int userId;
+    public static Integer userId;
 
     private List<LatLng> coordonates = new ArrayList<>();
 
@@ -81,6 +89,7 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
         }
     };
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,13 +109,13 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
 
         Criteria crit = new Criteria();
         crit.setAccuracy(Criteria.ACCURACY_FINE);
+        crit.setAccuracy(Criteria.ACCURACY_COARSE);
         crit.setPowerRequirement(Criteria.POWER_LOW);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         String best = locationManager.getBestProvider(crit, false);
         locationManager.requestLocationUpdates(best, 0, 1, locationListener);
 
         startDateTime = Calendar.getInstance().getTimeInMillis();
-        dateTime = calculateTime(startDateTime);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -121,51 +130,55 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
         stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                stopLocationUpdates();
+                mapShowRoute();
+
+                //save map screenshot
+                image = saveMapPhoto();
+
                 AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
                 builder.setMessage("Do you want to save this activity?");
                 builder.setCancelable(true);
 
                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @RequiresApi(api = Build.VERSION_CODES.O)
                     @SuppressLint("Range")
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
 
-                        mapShowRoute();
-                        //save map screenshot
-                        image = saveMapPhoto();
+                        finalDistance = String.valueOf(getFinalDistance(distance));
 
                         finishDateTime = Calendar.getInstance().getTimeInMillis();
                         time = finishDateTime - startDateTime;
                         timeElapsed = calculateTime(time);
-                        Toast.makeText(getApplicationContext(), "time elapsed: " + timeElapsed, Toast.LENGTH_SHORT).show();
 
                         pace = calculatePace(distance, time);
-                        Toast.makeText(getApplicationContext(), "pace: " + pace, Toast.LENGTH_SHORT).show();
 
                         //fetch user id
                         userEmail = PreferenceManager.getDefaultSharedPreferences(MapsActivity.this)
                                 .getString("email", "No user found");
 
                         //retrieve id from user table
-                        String query = "SELECT ID from user WHERE email=?";//+userEmail;
+                        String query = "SELECT ID from user WHERE email=?";
                         Cursor cursor = db.rawQuery(query, new String[]{userEmail});
                         cursor.moveToFirst();
                         userId = cursor.getInt(cursor.getColumnIndex("ID"));
                         db.close();
 
                         //insert activity in database
-                        boolean insert = databaseHelper.Insert(dateTime, pace, timeElapsed, distance, image, userId);
+                        boolean insert = databaseHelper.Insert(LocalDate.now(), LocalTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)), pace, timeElapsed, finalDistance, image, userId);
                         if (insert) {
                             Toast.makeText(getApplicationContext(), "Activity saved ", Toast.LENGTH_SHORT).show();
                             openGPSActivity();
                         } else {
                             Toast.makeText(getApplicationContext(), "Error saving activity", Toast.LENGTH_SHORT).show();
                         }
+
                     }
                 }).setNegativeButton("No", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
-                        openGPSActivity();
+                        openHomeActivity();
                     }
                 });
 
@@ -207,14 +220,14 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
 
                 //calculate distance from first location to current location
                 if (prevLocation != null && currentLocation != null) {
-                    distance = distance + (prevLocation.distanceTo(currentLocation));
+                    distance = distance + prevLocation.distanceTo(currentLocation);//(double) (((int) (prevLocation.distanceTo(currentLocation) * 100)) / 100);
                 } else {
                     distance = 0;
                 }
 
                 //follow the pin
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 17));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 20));
                 mMap.setMyLocationEnabled(true);
 
                 //add blue line between previous location and current location
@@ -231,15 +244,18 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
 
     }
 
+    private void stopLocationUpdates() {
+        locationManager.removeUpdates(locationListener);
+    }
+
     public byte[] saveMapPhoto() {
         mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
             @Override
-            public void onSnapshotReady(Bitmap bitmap) {
+            public void onSnapshotReady(@Nullable Bitmap bitmap) {
                 image = getBitmapAsByteArray(bitmap);
             }
         });
         return image;
-
     }
 
     public static byte[] getBitmapAsByteArray(Bitmap bitmap) {
@@ -248,9 +264,18 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
         return outputStream.toByteArray();
     }
 
+    public void openHomeActivity() {
+        Intent intent = new Intent(this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        MapsActivity.this.finish();
+    }
+
     public void openGPSActivity() {
         Intent intent = new Intent(this, GPSActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        MapsActivity.this.finish();
     }
 
     public String calculateTime(long time) {
@@ -258,23 +283,35 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
         int minutes = (int) ((time / (1000 * 60)) % 60);
         int hours = (int) ((time / (1000 * 60 * 60)) % 24);
         StringBuilder finalTime = new StringBuilder();
-        finalTime.append(hours + ":" + minutes + ":" + seconds);
+        if (hours == 0) {
+            finalTime.append(minutes + "m " + seconds + "s");
+        } else {
+            finalTime.append(hours + "h " + minutes + "m " + seconds + "s");
+        }
         return finalTime.toString();
     }
 
-    public String calculatePace(double distance, long time) {
-        if (distance != 0 && time != 0) {
-            double pace = (time / 1000) / distance;
-            double seconds = pace % 60;
-            int minutes = Integer.parseInt(String.valueOf(pace / 60));
-            StringBuilder finalPace = new StringBuilder();
-            finalPace.append(minutes);
-            finalPace.append(":");
-            finalPace.append(seconds);
-            return finalPace.toString();
+    //pace=min/km
+    public String calculatePace(float distance, long time) {
+        double pace;
+        double dist = getFinalDistance(distance);
+        if (dist != 0 && time != 0) {
+            pace = (int) (((int) (time / 1000) / dist) * 100) / 100;
+
         } else {
-            return "0";
+            pace = 0;
         }
+        return String.valueOf(pace);
+    }
+
+    //distance will only be displayed if it is greater than 9m
+    public double getFinalDistance(float distance) {
+        double finalDistance = 0;
+        int intDistance = (int) distance;
+        if (intDistance > 9) {
+            finalDistance = intDistance / 1000;
+        }
+        return finalDistance;
     }
 
     public void mapShowRoute() {
@@ -283,7 +320,7 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
             builder.include(c);
 
             //initialize the padding for map boundary
-            int padding = 50;
+            int padding = 10;
 
             //create the bounds from latlngBuilder to set into map camera
             LatLngBounds bounds = builder.build();
@@ -301,4 +338,6 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
             });
         }
     }
+
+
 }

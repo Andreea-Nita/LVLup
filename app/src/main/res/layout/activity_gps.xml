@@ -7,20 +7,8 @@
     android:background="@drawable/background_activity"
     tools:context=".gpsTracking.GPSActivity">
 
-    <TextView
-        android:id="@+id/distanceTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/Distance"
-        android:textColor="#FFFFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.147"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/timeTextView"
-        app:layout_constraintVertical_bias="0.0" />
 
-    <fragment
+ <!-- <fragment
         android:id="@+id/mapFragment"
         class="com.google.android.gms.maps.MapFragment"
         android:layout_width="335dp"
@@ -28,67 +16,104 @@
         android:layout_marginTop="80dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />-->
 
-    <Button
-        android:id="@+id/startGPSButton"
-        android:layout_width="128dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="@string/StartGPS"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/mapFragment" />
+ <Button
+     android:id="@+id/startGPSButton"
+     android:layout_width="128dp"
+     android:layout_height="wrap_content"
+     android:layout_marginTop="8dp"
+     android:layout_marginBottom="236dp"
+     android:text="@string/StartGPS"
+     app:layout_constraintBottom_toBottomOf="parent"
+     app:layout_constraintEnd_toEndOf="parent"
+     app:layout_constraintHorizontal_bias="0.498"
+     app:layout_constraintHorizontal_chainStyle="packed"
+     app:layout_constraintStart_toStartOf="parent"
+     app:layout_constraintTop_toBottomOf="@+id/imageViewMapResult"
+     app:layout_constraintVertical_bias="0.0" />
 
-    <TextView
-        android:id="@+id/averagePaceTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:text="@string/AveragePace"
-        android:textColor="#FFFFFF"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.161"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/startGPSButton" />
+ <TextView
+     android:id="@+id/distanceTextView"
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_marginStart="35dp"
+     android:layout_marginTop="3dp"
+     android:text="@string/Distance"
+     android:textColor="#FFFFFF"
+     app:layout_constraintBottom_toBottomOf="parent"
+     app:layout_constraintEnd_toEndOf="parent"
+     app:layout_constraintHorizontal_bias="0.0"
+     app:layout_constraintStart_toStartOf="parent"
+     app:layout_constraintTop_toBottomOf="@+id/timeTextView"
+     app:layout_constraintVertical_bias="0.0" />
 
-    <TextView
-        android:id="@+id/timeTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/Time"
-        android:textColor="#FFFFFF"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.138"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/averagePaceTextView" />
+ <TextView
+     android:id="@+id/averagePaceTextView"
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_marginStart="35dp"
+     android:layout_marginTop="15dp"
+     android:text="@string/AveragePace"
+     android:textColor="#FFFFFF"
+     app:layout_constraintEnd_toEndOf="parent"
+     app:layout_constraintHorizontal_bias="0.0"
+     app:layout_constraintStart_toStartOf="parent"
+     app:layout_constraintTop_toBottomOf="@+id/startGPSButton" />
 
-    <ImageButton
-        android:id="@+id/musicGPSbutton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="28dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/mapFragment"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_baseline_music_note_24" />
+ <TextView
+     android:id="@+id/timeTextView"
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_marginStart="35dp"
+     android:layout_marginTop="3dp"
+     android:text="@string/Time"
+     android:textColor="#FFFFFF"
+     app:layout_constraintEnd_toEndOf="parent"
+     app:layout_constraintHorizontal_bias="0.0"
+     app:layout_constraintStart_toStartOf="parent"
+     app:layout_constraintTop_toBottomOf="@+id/averagePaceTextView" />
 
-    <ImageButton
-        android:id="@+id/homeGPSbutton"
-        android:layout_width="65dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="260dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/mapFragment"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.302"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/home_button" />
+ <ImageButton
+     android:id="@+id/musicGPSbutton"
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_marginTop="16dp"
+     android:layout_marginEnd="32dp"
+     android:minHeight="48dp"
+     app:layout_constraintBottom_toTopOf="@+id/imageViewMapResult"
+     app:layout_constraintEnd_toEndOf="parent"
+     app:layout_constraintHorizontal_bias="1.0"
+     app:layout_constraintStart_toEndOf="@+id/homeGPSbutton"
+     app:layout_constraintTop_toTopOf="parent"
+     app:layout_constraintVertical_bias="0.269"
+     app:srcCompat="@drawable/ic_baseline_music_note_24"
+     tools:ignore="SpeakableTextPresentCheck,SpeakableTextPresentCheck" />
+
+ <ImageButton
+     android:id="@+id/homeGPSbutton"
+     android:layout_width="65dp"
+     android:layout_height="48dp"
+     app:layout_constraintBottom_toTopOf="@+id/imageViewMapResult"
+     app:layout_constraintEnd_toEndOf="parent"
+     app:layout_constraintHorizontal_bias="0.101"
+     app:layout_constraintStart_toStartOf="parent"
+     app:layout_constraintTop_toTopOf="parent"
+     app:layout_constraintVertical_bias="0.441"
+     app:srcCompat="@drawable/home_button"
+     tools:ignore="SpeakableTextPresentCheck" />
+
+ <ImageView
+     android:id="@+id/imageViewMapResult"
+     android:layout_width="362dp"
+     android:layout_height="373dp"
+     android:layout_marginTop="13dp"
+     android:adjustViewBounds="true"
+     android:scaleType="centerInside"
+     app:layout_constraintEnd_toEndOf="parent"
+     app:layout_constraintHorizontal_bias="0.489"
+     app:layout_constraintStart_toStartOf="parent"
+     app:layout_constraintTop_toBottomOf="@+id/musicGPSbutton"
+     tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -17,6 +17,7 @@ import com.andreeanita.lvlup.Database.DatabaseHelper;
 import com.andreeanita.lvlup.R;
 import com.andreeanita.lvlup.gpsTracking.GPSActivity;
 import com.andreeanita.lvlup.gpsTracking.MapsActivity;
+import com.andreeanita.lvlup.home.HomeActivity;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -60,15 +61,9 @@ public class Login extends AppCompatActivity {
                 if (checklogin == true) {
                     Toast.makeText(getApplicationContext(), "Login Successful", Toast.LENGTH_SHORT).show();
 
-                    /*Bundle bundle = new Bundle();
-                    bundle.putString("email", email);
-                    Intent intent = new Intent(Login.this, MapsActivity.class);
-                    intent.putExtras(bundle);
-                    startActivity(intent);*/
-
                     saveEmail(email);
 
-                    openGPSActivity();
+                    openHomeActivity();
                 } else {
                     Toast.makeText(getApplicationContext(), "Invalid username or password", Toast.LENGTH_SHORT).show();
                 }
@@ -83,11 +78,6 @@ public class Login extends AppCompatActivity {
             }
         });
 
-        //runtime error
-        /*Intent intent = new Intent(Login.this, MapsActivity.class);
-        String emailLogin=null;
-        intent.putExtra( "emailLogin", etEmail.getText().toString());
-        startActivity(intent);*/
     }
 
     public void openRegister() {
@@ -95,21 +85,12 @@ public class Login extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void openGPSActivity() {
-        Intent intent = new Intent(this, GPSActivity.class);
+    public void openHomeActivity() {
+        Intent intent = new Intent(this, HomeActivity.class);
         startActivity(intent);
     }
 
-    public void saveEmail(String string){
-        /*if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            try (BufferedWriter br = Files.newBufferedWriter(
-                    Paths.get("src/main/res/raw/login_email"),
-                    Charset.forName("UTF8"))) {
-                br.write(string);
-            } catch (IOException e){
-                e.printStackTrace();
-            }
-        };*/
+    public void saveEmail(String string) {
 
         PreferenceManager.getDefaultSharedPreferences(this)
                 .edit().putString("email", string)

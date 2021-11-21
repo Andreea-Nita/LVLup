@@ -1,53 +1,32 @@
 package com.andreeanita.lvlup.gpsTracking;
 
-import android.Manifest;
+import static com.andreeanita.lvlup.gpsTracking.MapsActivity.image;
+
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.Toast;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import com.andreeanita.lvlup.R;
 import com.andreeanita.lvlup.home.HomeActivity;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.Task;
 
 public class GPSActivity extends AppCompatActivity implements LocationListener {
-
-
-    Location currentLocation;
-    FusedLocationProviderClient fusedLocationProviderClient;
-    private static final int REQUEST_CODE = 200;
-    private MapFragment mapFragment;
-    private LatLng current;
-    private GoogleMap googleMap;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gps);
-
-        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
-
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        fetchCurrentLocation();
-
 
         ImageButton btnHome = (ImageButton) findViewById(R.id.homeGPSbutton);
         btnHome.setOnClickListener(view -> openHome());
@@ -68,75 +47,50 @@ public class GPSActivity extends AppCompatActivity implements LocationListener {
             }
         });
 
-    }
+        TextView paceTextView = (TextView) findViewById(R.id.averagePaceTextView);
+        if (MapsActivity.pace != null) {
+            paceTextView.setText("Pace: " + MapsActivity.pace + " m/km");
+        } else paceTextView.setText("Pace: 0:0 m/km");
 
+        TextView distanceTextView = (TextView) findViewById(R.id.distanceTextView);
+        if (MapsActivity.finalDistance != null) {
+            distanceTextView.setText("Distance: " + MapsActivity.finalDistance + " km");
+        } else distanceTextView.setText("Distance: 0.0 km");
 
-    private void fetchCurrentLocation() {
+        TextView timeTextView = (TextView) findViewById(R.id.timeTextView);
+        if (MapsActivity.timeElapsed != null) {
+            timeTextView.setText("Time: " + MapsActivity.timeElapsed);
+        } else timeTextView.setText("Time: 0m");
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 5;
+        Bitmap bitmap = BitmapFactory.decodeByteArray(image, 0, image.length);
+        ImageView imageView = (ImageView) findViewById(R.id.imageViewMapResult);
+        imageView.setImageBitmap(bitmap);
 
-
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
-            return;
-        }
-
-        Task<Location> task = fusedLocationProviderClient.getLastLocation();
-        task.addOnSuccessListener(location -> {
-            if (location != null) {
-                currentLocation = location;
-               /* Toast.makeText(getApplicationContext(), currentLocation.getLatitude() + "," +
-                        currentLocation.getLongitude(), Toast.LENGTH_LONG).show();*/
-
-
-                if (mapFragment != null) {
-                    mapFragment.getMapAsync(new OnMapReadyCallback() {
-                        @Override
-                        public void onMapReady(@NonNull GoogleMap googleMap) {
-                            LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-                            MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("You are here");
-                            googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
-                            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-                            googleMap.addMarker(markerOptions);
-                        }
-                    });
-                }
-            }
-        });
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                fetchCurrentLocation();
-            }
-        }
     }
 
 
     public void openHome() {
+        MapsActivity.pace = null;
+        MapsActivity.timeElapsed = null;
+        MapsActivity.finalDistance = null;
         Intent intent = new Intent(this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        GPSActivity.this.finish();
     }
 
     public void openMapsActivity() {
         Intent intent = new Intent(this, MapsActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        GPSActivity.this.finish();
     }
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
-        fetchCurrentLocation();
-        /*LatLng prev = current;
-        current = new LatLng(location.getLatitude(), location.getLongitude());
-        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(current, 25);
-        googleMap.animateCamera(update);
-        if (prev != null) {
-            googleMap.addPolyline((new PolylineOptions())
-                    .add(prev, current).width(6).color(Color.BLUE)
-                    .visible(true));
-        }*/
+
     }
+
 }
