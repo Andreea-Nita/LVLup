@@ -71,8 +71,7 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
     float distance = 0.0F;
     public static String finalDistance;
     public static String pace;
-    private String userEmail;
-    public static Integer userId;
+    public static String userEmail;
 
     private List<LatLng> coordonates = new ArrayList<>();
 
@@ -158,15 +157,17 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
                         userEmail = PreferenceManager.getDefaultSharedPreferences(MapsActivity.this)
                                 .getString("email", "No user found");
 
-                        //retrieve id from user table
+                        /*//retrieve id from user table
                         String query = "SELECT ID from user WHERE email=?";
                         Cursor cursor = db.rawQuery(query, new String[]{userEmail});
                         cursor.moveToFirst();
                         userId = cursor.getInt(cursor.getColumnIndex("ID"));
-                        db.close();
+                        db.close();*/
 
                         //insert activity in database
-                        boolean insert = databaseHelper.Insert(LocalDate.now(), LocalTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)), pace, timeElapsed, finalDistance, image, userId);
+                        boolean insert = databaseHelper.Insert(LocalDate.now(),
+                                LocalTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)), pace, timeElapsed,
+                                finalDistance, image, userEmail);
                         if (insert) {
                             Toast.makeText(getApplicationContext(), "Activity saved ", Toast.LENGTH_SHORT).show();
                             openGPSActivity();

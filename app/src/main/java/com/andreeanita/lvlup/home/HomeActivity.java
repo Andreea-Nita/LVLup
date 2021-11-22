@@ -2,23 +2,31 @@ package com.andreeanita.lvlup.home;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.andreeanita.lvlup.Database.DatabaseHelper;
 import com.andreeanita.lvlup.R;
 import com.andreeanita.lvlup.gpsTracking.MapsActivity;
 import com.andreeanita.lvlup.loginAndRegister.Login;
 
 public class HomeActivity extends AppCompatActivity {
     Button startRunning;
+    DatabaseHelper databaseHelper;
+    SQLiteDatabase db;
+    public static String userEmail;
 
     @SuppressLint("Range")
     @Override
@@ -33,6 +41,22 @@ public class HomeActivity extends AppCompatActivity {
                 openMapsActivity();
             }
         });
+
+        databaseHelper = new DatabaseHelper(this);
+        db = databaseHelper.getWritableDatabase();
+
+        //fetch user id
+        userEmail = PreferenceManager.getDefaultSharedPreferences(HomeActivity.this)
+                .getString("email", "No user found");
+
+        String query = "SELECT rowid _id,* from user_activity WHERE  email=?";
+        Cursor cursor = db.rawQuery(query, new String[]{userEmail});
+
+        ListView activityItems=(ListView) findViewById(R.id.activityList);
+
+        ListViewAdapter listViewAdapter=new ListViewAdapter(this,cursor);
+        activityItems.setAdapter(listViewAdapter);
+        listViewAdapter.changeCursor(cursor);
 
 
     }

@@ -14,7 +14,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     public DatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, 3);
+        super(context, DATABASE_NAME, null, 4);
     }
 
     @Override
@@ -22,7 +22,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("PRAGMA foreign_keys = ON;");
         db.execSQL("CREATE TABLE if not exists user(ID INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT, email TEXT, password TEXT)");
         db.execSQL("CREATE TABLE if not exists user_activity(ID INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT,time TEXT,pace TEXT," +
-                "time_elapsed TEXT, distance TEXT,image BLOB, user_id INTEGER NOT NULL,FOREIGN KEY (user_id) REFERENCES user (ID))");
+                "time_elapsed TEXT, distance TEXT,image BLOB, email TEXT NOT NULL,FOREIGN KEY (email) REFERENCES user (email))");
     }
 
     @Override
@@ -46,7 +46,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public boolean Insert(LocalDate date, String time, String pace, String time_elapsed, String distance, byte[] image, Integer user_id){
+    public boolean Insert(LocalDate date, String time, String pace, String time_elapsed, String distance, byte[] image, String email){
         SQLiteDatabase sqLiteDatabase=this.getWritableDatabase();
         ContentValues contentValues=new ContentValues();
         contentValues.put("date", String.valueOf(date));
@@ -54,7 +54,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put("pace",pace);
         contentValues.put("time_elapsed",time_elapsed);
         contentValues.put("distance",distance);
-        contentValues.put("user_id",user_id);
+        contentValues.put("email",email);
         contentValues.put("image", image);
         long result=sqLiteDatabase.insert("user_activity",null,contentValues);
         if(result == -1){
