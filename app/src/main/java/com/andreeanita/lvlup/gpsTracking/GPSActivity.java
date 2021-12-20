@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -28,10 +29,10 @@ public class GPSActivity extends AppCompatActivity implements LocationListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gps);
 
-        ImageButton btnHome = (ImageButton) findViewById(R.id.homeGPSbutton);
+        ImageButton btnHome = findViewById(R.id.homeGPSbutton);
         btnHome.setOnClickListener(view -> openHome());
 
-        ImageButton btnMusic = (ImageButton) findViewById(R.id.musicGPSbutton);
+        ImageButton btnMusic = findViewById(R.id.musicGPSbutton);
         btnMusic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -39,7 +40,7 @@ public class GPSActivity extends AppCompatActivity implements LocationListener {
             }
         });
 
-        Button btnStart = (Button) findViewById(R.id.startGPSButton);
+        Button btnStart = findViewById(R.id.startGPSButton);
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -47,27 +48,34 @@ public class GPSActivity extends AppCompatActivity implements LocationListener {
             }
         });
 
-        TextView paceTextView = (TextView) findViewById(R.id.averagePaceTextView);
+        TextView paceTextView = findViewById(R.id.averagePaceTextView);
         if (MapsActivity.pace != null) {
             paceTextView.setText("Pace: " + MapsActivity.pace + " m/km");
         } else paceTextView.setText("Pace: 0:0 m/km");
 
-        TextView distanceTextView = (TextView) findViewById(R.id.distanceTextView);
+        TextView distanceTextView = findViewById(R.id.distanceTextView);
         if (MapsActivity.finalDistance != null) {
             distanceTextView.setText("Distance: " + MapsActivity.finalDistance + " km");
         } else distanceTextView.setText("Distance: 0.0 km");
 
-        TextView timeTextView = (TextView) findViewById(R.id.timeTextView);
+        TextView timeTextView = findViewById(R.id.timeTextView);
         if (MapsActivity.timeElapsed != null) {
             timeTextView.setText("Time: " + MapsActivity.timeElapsed);
         } else timeTextView.setText("Time: 0m");
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = 5;
-        Bitmap bitmap = BitmapFactory.decodeByteArray(image, 0, image.length);
-        ImageView imageView = (ImageView) findViewById(R.id.imageViewMapResult);
+        Bitmap bitmap = base64ToBitmap(image);
+        ImageView imageView = findViewById(R.id.imageViewMapResult);
         imageView.setImageBitmap(bitmap);
 
+    }
+
+    public static Bitmap base64ToBitmap(String image) {
+        byte[] decodedBytes = Base64.decode(
+                image.substring(image.indexOf(",") + 1),
+                Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
     }
 
 

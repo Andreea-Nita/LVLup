@@ -2,10 +2,7 @@ package com.andreeanita.lvlup.home;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -17,16 +14,27 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.andreeanita.lvlup.Database.DatabaseHelper;
 import com.andreeanita.lvlup.R;
 import com.andreeanita.lvlup.gpsTracking.MapsActivity;
+import com.andreeanita.lvlup.gpsTracking.RunningSession;
 import com.andreeanita.lvlup.loginAndRegister.Login;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
 
 public class HomeActivity extends AppCompatActivity {
     Button startRunning;
-    DatabaseHelper databaseHelper;
-    SQLiteDatabase db;
-    public static String userEmail;
+
+    ArrayList<RunningSession> list = new ArrayList<>();
+    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+    DatabaseReference databaseReference = FirebaseDatabase.getInstance("https://lvlup-330812-default-rtdb.europe-west1.firebasedatabase.app/")
+            .getReferenceFromUrl("https://lvlup-330812-default-rtdb.europe-west1.firebasedatabase.app/");
 
     @SuppressLint("Range")
     @Override
@@ -34,7 +42,7 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        startRunning = (Button) findViewById(R.id.startRunningButton);
+        startRunning = findViewById(R.id.startRunningButton);
         startRunning.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -42,24 +50,33 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        databaseHelper = new DatabaseHelper(this);
-        db = databaseHelper.getWritableDatabase();
+        ListView activityItems = findViewById(R.id.activityList);
 
-        //fetch user id
-        userEmail = PreferenceManager.getDefaultSharedPreferences(HomeActivity.this)
-                .getString("email", "No user found");
+        try {
+            DatabaseReference reference = databaseReference.child("users").child(userId).child("activities");
+            reference.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    list.clear();
+                    for (DataSnapshot snpshot : snapshot.getChildren()) {
+                        RunningSession run = snpshot.getValue(RunningSession.class);
+                        list.add(run);
+                    }
+                    ListViewAdapter adapter = new ListViewAdapter(HomeActivity.this, list);
+                    activityItems.setAdapter(adapter);
 
-        String query = "SELECT rowid _id,* from user_activity WHERE  email=?";
-        Cursor cursor = db.rawQuery(query, new String[]{userEmail});
+                }
 
-        ListView activityItems=(ListView) findViewById(R.id.activityList);
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
 
-        ListViewAdapter listViewAdapter=new ListViewAdapter(this,cursor);
-        activityItems.setAdapter(listViewAdapter);
-        listViewAdapter.changeCursor(cursor);
-
-
+                }
+            });
+        } catch (NullPointerException e) {
+            System.out.println(e.getMessage());
+        }
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -68,6 +85,7 @@ public class HomeActivity extends AppCompatActivity {
         return true;
     }
 
+    @SuppressLint("CommitPrefEdits")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
@@ -76,6 +94,7 @@ public class HomeActivity extends AppCompatActivity {
                 return true;
 
             case R.id.logoutItem:
+                FirebaseAuth.getInstance().signOut();
                 openLogin();
                 return true;
             default:

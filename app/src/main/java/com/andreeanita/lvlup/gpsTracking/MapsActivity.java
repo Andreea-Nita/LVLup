@@ -7,8 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Criteria;
@@ -18,9 +16,9 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,21 +26,17 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import com.andreeanita.lvlup.Database.DatabaseHelper;
 import com.andreeanita.lvlup.R;
 import com.andreeanita.lvlup.databinding.ActivityMapsBinding;
 import com.andreeanita.lvlup.home.HomeActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.*;
+import com.google.android.gms.maps.model.*;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
@@ -53,8 +47,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-public class
-MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
     protected GoogleMap mMap;
     protected ActivityMapsBinding binding;
@@ -67,16 +60,16 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
     private long startDateTime;
     protected long time;
     public static String timeElapsed;
-    public static byte[] image;
+    public static String image;
     float distance = 0.0F;
     public static String finalDistance;
     public static String pace;
     public static String userEmail;
+    public static String userUid;
+    public static String type;
 
     private List<LatLng> coordonates = new ArrayList<>();
 
-    private DatabaseHelper databaseHelper;
-    private SQLiteDatabase db;
     private LocationManager locationManager;
 
     private LocationListener locationListener = new LocationListener() {
@@ -122,10 +115,10 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        databaseHelper = new DatabaseHelper(this);
-        db = databaseHelper.getWritableDatabase();
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance("https://lvlup-330812-default-rtdb.europe-west1.firebasedatabase.app/")
+                .getReferenceFromUrl("https://lvlup-330812-default-rtdb.europe-west1.firebasedatabase.app/");
 
-        Button stop = (Button) findViewById(R.id.stopButton);
+        Button stop = findViewById(R.id.stopButton);
         stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -145,7 +138,8 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
 
-                        finalDistance = String.valueOf(getFinalDistance(distance));
+
+                        finalDistance = String.format("%.2f", (getFinalDistance(distance)));
 
                         finishDateTime = Calendar.getInstance().getTimeInMillis();
                         time = finishDateTime - startDateTime;
@@ -157,23 +151,29 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
                         userEmail = PreferenceManager.getDefaultSharedPreferences(MapsActivity.this)
                                 .getString("email", "No user found");
 
-                        /*//retrieve id from user table
-                        String query = "SELECT ID from user WHERE email=?";
-                        Cursor cursor = db.rawQuery(query, new String[]{userEmail});
-                        cursor.moveToFirst();
-                        userId = cursor.getInt(cursor.getColumnIndex("ID"));
-                        db.close();*/
+                        String date = String.valueOf(LocalDate.now());
+                        String activityTime = LocalTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT));
 
-                        //insert activity in database
-                        boolean insert = databaseHelper.Insert(LocalDate.now(),
-                                LocalTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)), pace, timeElapsed,
-                                finalDistance, image, userEmail);
-                        if (insert) {
-                            Toast.makeText(getApplicationContext(), "Activity saved ", Toast.LENGTH_SHORT).show();
-                            openGPSActivity();
+                        userUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+
+                        if (LocalTime.now().isAfter(LocalTime.parse("00:00:00")) && LocalTime.now().isBefore(LocalTime.parse("03:59:00"))) {
+                            type = "Night run";//map.put("Night run", runningSession);
+                        } else if (LocalTime.now().isAfter(LocalTime.parse("04:00:00")) && LocalTime.now().isBefore(LocalTime.parse("11:59:00"))) {
+                            type = "Morning run";//map.put("Morning run", runningSession);
+                        } else if (LocalTime.now().isAfter(LocalTime.parse("12:00:00")) && LocalTime.now().isBefore(LocalTime.parse("17:59:00"))) {
+                            type = "Day run";// map.put("Day run", runningSession);
                         } else {
-                            Toast.makeText(getApplicationContext(), "Error saving activity", Toast.LENGTH_SHORT).show();
+                            type = "Evening run";//map.put("Evening run", runningSession);
                         }
+
+                        RunningSession runningSession = new RunningSession(date, activityTime, pace, timeElapsed,
+                                finalDistance, image, type);
+                        DatabaseReference reference = databaseReference.child("users").child(userUid).child("activities");
+                        String pushedId = reference.push().getKey();
+                        reference.child(pushedId).setValue(runningSession);
+
+                        openGPSActivity();
 
                     }
                 }).setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -249,20 +249,21 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
         locationManager.removeUpdates(locationListener);
     }
 
-    public byte[] saveMapPhoto() {
+    public String saveMapPhoto() {
         mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
             @Override
             public void onSnapshotReady(@Nullable Bitmap bitmap) {
-                image = getBitmapAsByteArray(bitmap);
+                image = getBitmapAsBase64(bitmap);
             }
         });
         return image;
     }
 
-    public static byte[] getBitmapAsByteArray(Bitmap bitmap) {
+    public static String getBitmapAsBase64(Bitmap bitmap) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 0, outputStream);
-        return outputStream.toByteArray();
+        String encoded = Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
+        return encoded;
     }
 
     public void openHomeActivity() {
@@ -294,23 +295,32 @@ MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationLis
 
     //pace=min/km
     public String calculatePace(float distance, long time) {
-        double pace;
+        int pace;
+        String finalPace;
         double dist = getFinalDistance(distance);
         if (dist != 0 && time != 0) {
-            pace = (int) (((int) (time / 1000) / dist) * 100) / 100;
+            pace = (int) ((int) (time / 1000) / dist);
 
         } else {
             pace = 0;
         }
-        return String.valueOf(pace);
+        int min = pace / 60;
+        int sec = pace % 60;
+        if (sec < 10) {
+            finalPace = min + ":" + sec + "0";
+        } else {
+            finalPace = min + ":" + sec;
+        }
+
+        return finalPace;
     }
 
     //distance will only be displayed if it is greater than 9m
     public double getFinalDistance(float distance) {
-        double finalDistance = 0;
-        int intDistance = (int) distance;
-        if (intDistance > 9) {
-            finalDistance = intDistance / 1000;
+        double finalDistance = 0.0;
+        double doubleDistance = (int) distance;
+        if (doubleDistance > 9) {
+            finalDistance = doubleDistance / 1000;
         }
         return finalDistance;
     }

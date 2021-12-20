@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "153729568434",
+    "project_id": "lvlup-330812",
+    "storage_bucket": "lvlup-330812.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153729568434:android:c4d1e68e9f13ecd59803ab",
+        "android_client_info": {
+          "package_name": "com.andreeanita.lvlup"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "153729568434-s2448sgnplokf4kr9k7vl1dglm2l5i2b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.andreeanita.lvlup",
+            "certificate_hash": "937e681d1eea4379842be21689168f23c25f6637"
+          }
+        },
+        {
+          "client_id": "153729568434-qbcjcrtcnpe1snhsm563ftapg4srvf74.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAU8gNIrKAZ0CEaWfaeLvMSVLQY5EfFAyo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "153729568434-qbcjcrtcnpe1snhsm563ftapg4srvf74.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

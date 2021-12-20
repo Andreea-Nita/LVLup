@@ -1,7 +1,5 @@
 package com.andreeanita.lvlup.loginAndRegister;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -10,63 +8,66 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.andreeanita.lvlup.Database.DatabaseHelper;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.andreeanita.lvlup.R;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class Register extends AppCompatActivity {
-    TextView login;
-    Button signUp;
-    EditText etName, etEmail, etPassword, etConfirmPassword;
-    DatabaseHelper databaseHelper;
+    private TextView login;
+    private Button signUp;
+    private EditText etEmail, etPassword, etConfirmPassword;
+    public static int id;
+    FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        databaseHelper = new DatabaseHelper(this);
+        etEmail = findViewById(R.id.editTextEmail);
+        etPassword = findViewById(R.id.editTextPassword);
+        etConfirmPassword = findViewById(R.id.editTextConfirmPassword);
 
-        etName = (EditText) findViewById(R.id.editTextRegisterName);
-        etEmail = (EditText) findViewById(R.id.editTextEmail);
-        etPassword = (EditText) findViewById(R.id.editTextPassword);
-        etConfirmPassword = (EditText) findViewById(R.id.editTextConfirmPassword);
+        firebaseAuth = FirebaseAuth.getInstance();
 
-        signUp = (Button) findViewById(R.id.buttonRegister);
+        signUp = findViewById(R.id.buttonRegister);
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String name = etName.getText().toString();
                 String email = etEmail.getText().toString();
                 String password = etPassword.getText().toString();
                 String confirmPassword = etConfirmPassword.getText().toString();
 
-                if (name.equals("") || email.equals("") || password.equals("") || confirmPassword.equals("")) {
+                if (email.equals("") || password.equals("") || confirmPassword.equals("")) {
                     Toast.makeText(getApplicationContext(), "Fields Required", Toast.LENGTH_SHORT).show();
                 } else {
                     if (password.equals(confirmPassword)) {
-                        Boolean checkEmail = databaseHelper.CheckEmail(email);
-                        if (checkEmail == true) {
-                            Boolean insert = databaseHelper.Insert(name, email, password);
-                            if (insert == true) {
-                                Toast.makeText(getApplicationContext(), "Registered", Toast.LENGTH_SHORT).show();
-                                etName.setText("");
-                                etEmail.setText("");
-                                etPassword.setText("");
-                                etConfirmPassword.setText("");
-                                openLogin();
+                        firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(Register.this, new OnCompleteListener() {
+                            @Override
+                            public void onComplete(@NonNull Task task) {
+
+                                if (!task.isSuccessful()) {
+                                    Toast.makeText(Register.this.getApplicationContext(),
+                                            "Error creating account " + task.getException().getMessage(),
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    startActivity(new Intent(Register.this, Login.class));
+                                }
                             }
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Username already taken", Toast.LENGTH_SHORT).show();
-                        }
+                        });
                     } else {
-                        Toast.makeText(getApplicationContext(), "Password does not match", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(Register.this, "Error", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
         });
 
 
-        login = (TextView) findViewById(R.id.textViewLogin);
+        login = findViewById(R.id.textViewLogin);
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -77,6 +78,8 @@ public class Register extends AppCompatActivity {
 
     public void openLogin() {
         Intent intent = new Intent(this, Login.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        Register.this.finish();
     }
 }

@@ -1,41 +1,30 @@
 package com.andreeanita.lvlup.loginAndRegister;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.andreeanita.lvlup.Database.DatabaseHelper;
 import com.andreeanita.lvlup.R;
-import com.andreeanita.lvlup.gpsTracking.GPSActivity;
-import com.andreeanita.lvlup.gpsTracking.MapsActivity;
 import com.andreeanita.lvlup.home.HomeActivity;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Serializable;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class Login extends AppCompatActivity {
     TextView register;
     EditText etEmail, etPassword;
     Button login;
     static String email;
+    FirebaseAuth firebaseAuth;
 
 
     @Override
@@ -43,34 +32,42 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        DatabaseHelper databaseHelper;
+        LinearLayout progressBar = findViewById(R.id.progressBar);
 
-        databaseHelper = new DatabaseHelper(this);
+        etEmail = findViewById(R.id.editTextLoginEmail);
+        etPassword = findViewById(R.id.editTextLoginPassword);
 
-        etEmail = (EditText) findViewById(R.id.editTextLoginEmail);
-        etPassword = (EditText) findViewById(R.id.editTextLoginPassword);
-
-        login = (Button) findViewById(R.id.buttonLogin);
+        login = findViewById(R.id.buttonLogin);
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                progressBar.setVisibility(View.VISIBLE);
+
                 email = etEmail.getText().toString();
                 String password = etPassword.getText().toString();
 
-                Boolean checklogin = databaseHelper.CheckLogin(email, password);
-                if (checklogin == true) {
-                    Toast.makeText(getApplicationContext(), "Login Successful", Toast.LENGTH_SHORT).show();
+                firebaseAuth = FirebaseAuth.getInstance();
 
-                    saveEmail(email);
 
-                    openHomeActivity();
+                if (email == null || password == null) {
+                    Toast.makeText(getApplicationContext(), "All fields required", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getApplicationContext(), "Invalid username or password", Toast.LENGTH_SHORT).show();
+                    firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(Login.this, new OnCompleteListener() {
+                        @Override
+                        public void onComplete(@NonNull Task task) {
+                            if (!task.isSuccessful()) {
+                                Toast.makeText(Login.this, "Account does not exist", Toast.LENGTH_SHORT).show();
+                            } else {
+                                openHomeActivity();
+                            }
+                        }
+                    });
                 }
             }
         });
 
-        register = (TextView) findViewById(R.id.textViewRegister);
+        register = findViewById(R.id.textViewRegister);
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -82,20 +79,21 @@ public class Login extends AppCompatActivity {
 
     public void openRegister() {
         Intent intent = new Intent(this, Register.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        Login.this.finish();
     }
 
     public void openHomeActivity() {
         Intent intent = new Intent(this, HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        Login.this.finish();
     }
 
     public void saveEmail(String string) {
-
         PreferenceManager.getDefaultSharedPreferences(this)
-                .edit().putString("email", string)
-                .apply();
-
+                .edit().putString("email", string).apply();
     }
 
 

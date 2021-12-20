@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.andreeanita.lvlup">
-
+    package="com.andreeanita.lvlup" >
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
          Google Maps Android API v2, but you must specify either coarse or fine
@@ -10,6 +9,7 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <meta-data
         android:name="com.google.android.gms.version"
@@ -17,12 +17,19 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/logo_launcher"
         android:label="LV⅃up"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/logo_start_activity"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LVLup">
-
+        android:theme="@style/Theme.LVLup" >
+        <activity
+            android:name=".StartActivity"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -35,7 +42,6 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDsqEVQu3RtX03GjQUsp9FZYMTnOu3GKc4" />
 
-
         <activity
             android:name=".gpsTracking.MapsActivity"
             android:exported="false"
@@ -46,18 +52,13 @@
         <activity
             android:name=".home.HomeActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
         <activity
             android:name=".loginAndRegister.Register"
             android:exported="true" />
         <activity
             android:name=".loginAndRegister.Login"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:exported="true" >
         </activity>
     </application>
 

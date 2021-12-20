@@ -7,7 +7,25 @@
     tools:context=".loginAndRegister.Login"
     android:background="@drawable/background_main_activity3">
 
-<EditText
+    <LinearLayout
+        android:id="@+id/progressBar"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ProgressBar
+            android:id="@+id/pbHeaderProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </ProgressBar>
+    </LinearLayout>
+
+    <EditText
     android:id="@+id/editTextLoginEmail"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -91,5 +109,6 @@
     app:layout_constraintStart_toEndOf="@+id/textViewDontHaveAnAccount"
     app:layout_constraintTop_toBottomOf="@+id/buttonLogin"
     app:layout_constraintVertical_bias="0.0" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
 

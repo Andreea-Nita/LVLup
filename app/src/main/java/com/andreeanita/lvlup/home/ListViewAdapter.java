@@ -1,66 +1,56 @@
 package com.andreeanita.lvlup.home;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.cursoradapter.widget.CursorAdapter;
+import androidx.annotation.NonNull;
 
 import com.andreeanita.lvlup.R;
+import com.andreeanita.lvlup.gpsTracking.GPSActivity;
+import com.andreeanita.lvlup.gpsTracking.RunningSession;
+import com.google.firebase.auth.FirebaseAuth;
 
-public class ListViewAdapter extends CursorAdapter {
+import java.util.ArrayList;
 
-    public ListViewAdapter(Context context, Cursor cursor) {
-        super(context, cursor, 0);
+public class ListViewAdapter extends ArrayAdapter<RunningSession> {
+    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+    public ListViewAdapter(@NonNull Context context, ArrayList<RunningSession> runningSessions) {
+        super(context, 0, runningSessions);
     }
 
-
-    // The newView method is used to inflate a new view and return it,
-    // you don't bind any data to the view at this point.
     @Override
-    public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        return LayoutInflater.from(context).inflate(R.layout.row_item, parent, false);
+    public View getView(int position, View convertView, ViewGroup parent) {
+        // Get the data item for this position
+        RunningSession runningSession = getItem(position);
+        // Check if an existing view is being reused, otherwise inflate the view
+        if (convertView == null) {
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.row_item, parent, false);
+        }
+        TextView activityName = convertView.findViewById(R.id.textViewName);
+        TextView activityDateTime = convertView.findViewById(R.id.textViewDateTime);
+        TextView activityPace = convertView.findViewById(R.id.textViewPace);
+        TextView activityDuration = convertView.findViewById(R.id.textViewDuration);
+        TextView activityDistance = convertView.findViewById(R.id.textViewDistance);
+        ImageView activityImage = convertView.findViewById(R.id.imageViewMap);
+
+        Bitmap bImage = GPSActivity.base64ToBitmap(runningSession.getImage());
+
+        activityName.setText(userId + "   " + runningSession.getTipe());
+        activityDateTime.setText(runningSession.getDate() + "   " + runningSession.getActivityTime());
+        activityPace.setText("Pace: " + runningSession.getPace());
+        activityDuration.setText("Time: " + runningSession.getTimeElapsed());
+        activityDistance.setText("Distance: " + runningSession.getFinalDistance());
+        activityImage.setImageBitmap(bImage);
+
+        return convertView;
     }
 
-    // The bindView method is used to bind all data to a given view
-    // such as setting the text on a TextView.
-    @Override
-    public void bindView(View view, Context context, Cursor cursor) {
-        // Find fields to populate in inflated template
-        TextView activityName = (TextView) view.findViewById(R.id.textViewName);
-        TextView activityDateTime = (TextView) view.findViewById(R.id.textViewDateTime);
-        TextView activityPace = (TextView) view.findViewById(R.id.textViewPace);
-        TextView activityDuration = (TextView) view.findViewById(R.id.textViewDuration);
-        TextView activityDistance = (TextView) view.findViewById(R.id.textViewDistance);
-        ImageView activityImage=(ImageView) view.findViewById(R.id.imageViewMap);
 
-        // Extract properties from cursor
-        @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex("email"));//TODO: replace with user name
-        @SuppressLint("Range") String dateTime = cursor.getString(cursor.getColumnIndex("date"))
-                +"   "+cursor.getString(cursor.getColumnIndex("time"));
-        @SuppressLint("Range") String pace = cursor.getString(cursor.getColumnIndex("pace"));
-        @SuppressLint("Range") String durtion = cursor.getString(cursor.getColumnIndex("time_elapsed"));
-        @SuppressLint("Range") String distance = cursor.getString(cursor.getColumnIndex("distance"));
-        @SuppressLint("Range") Bitmap image = BitmapFactory.decodeByteArray(cursor.getBlob(cursor.getColumnIndex("image")),
-                0, (cursor.getBlob(cursor.getColumnIndex("image"))).length);
-
-
-        // Populate fields with extracted properties
-        activityName.setText(name);
-        activityDateTime.setText(dateTime);
-        activityPace.setText(pace);
-        activityDuration.setText(durtion);
-        activityDistance.setText(distance);
-        activityImage.setImageBitmap(image);
-
-
-
-    }
 }
