@@ -1,14 +1,18 @@
 package com.andreeanita.lvlup.home;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -50,6 +54,10 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
+        ProgressBar pb = (ProgressBar) findViewById(R.id.pbLoading);
+        pb.setVisibility(ProgressBar.VISIBLE);
+
+
         ListView activityItems = findViewById(R.id.activityList);
 
         try {
@@ -60,11 +68,11 @@ public class HomeActivity extends AppCompatActivity {
                     list.clear();
                     for (DataSnapshot snpshot : snapshot.getChildren()) {
                         RunningSession run = snpshot.getValue(RunningSession.class);
-                        list.add(run);
+                        list.add(0,run);
                     }
                     ListViewAdapter adapter = new ListViewAdapter(HomeActivity.this, list);
                     activityItems.setAdapter(adapter);
-
+                    pb.setVisibility(ProgressBar.INVISIBLE);
                 }
 
                 @Override
@@ -75,6 +83,34 @@ public class HomeActivity extends AppCompatActivity {
         } catch (NullPointerException e) {
             System.out.println(e.getMessage());
         }
+
+        activityItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                RunningSession item = (RunningSession) activityItems.getItemAtPosition(position);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
+                builder.setMessage("Do you want to delete this activity?");
+                builder.setCancelable(true);
+
+                builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        DatabaseReference reference = databaseReference.child("users").child(userId).child("activities");
+                        reference.child(item.getKey()).removeValue();
+                    }
+                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                });
+
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
+
+        });
     }
 
 

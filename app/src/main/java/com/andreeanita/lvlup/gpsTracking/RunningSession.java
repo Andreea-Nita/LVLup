@@ -8,11 +8,12 @@ public class RunningSession {
     public String finalDistance;
     public String image;
     public String tipe;
+    public String key;
 
     public RunningSession() {
     }
 
-    public RunningSession(String date, String activityTime, String pace, String timeElapsed, String finalDistance, String image, String tipe) {
+    public RunningSession(String key, String date, String activityTime, String pace, String timeElapsed, String finalDistance, String image, String tipe) {
         this.date = date;
         this.activityTime = activityTime;
         this.pace = pace;
@@ -20,6 +21,7 @@ public class RunningSession {
         this.finalDistance = finalDistance;
         this.image = image;
         this.tipe = tipe;
+        this.key = key;
     }
 
     public String getDate() {
@@ -50,6 +52,10 @@ public class RunningSession {
         return tipe;
     }
 
+    public String getKey() {
+        return key;
+    }
+
     public void setDate(String date) {
         this.date = date;
     }
@@ -76,5 +82,9 @@ public class RunningSession {
 
     public void setTipe(String tipe) {
         this.tipe = tipe;
+    }
+
+    public void setkey(String key) {
+        this.key = key;
     }
 }

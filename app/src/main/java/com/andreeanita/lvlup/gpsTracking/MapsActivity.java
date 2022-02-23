@@ -167,10 +167,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             type = "Evening run";//map.put("Evening run", runningSession);
                         }
 
-                        RunningSession runningSession = new RunningSession(date, activityTime, pace, timeElapsed,
-                                finalDistance, image, type);
                         DatabaseReference reference = databaseReference.child("users").child(userUid).child("activities");
                         String pushedId = reference.push().getKey();
+                        RunningSession runningSession = new RunningSession(pushedId, date, activityTime, pace, timeElapsed,
+                                finalDistance, image, type);
+
                         reference.child(pushedId).setValue(runningSession);
 
                         openGPSActivity();
@@ -183,8 +184,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
 
-                AlertDialog alert11 = builder.create();
-                alert11.show();
+                AlertDialog alert = builder.create();
+                alert.show();
             }
         });
     }
